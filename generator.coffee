@@ -72,6 +72,7 @@ addTetra = (elevation) ->
   tetras.push newTetra
   return newTetra
 
+after = (t, fn) -> window.setTimeout(fn, t)
 
 # Scene Setup
 scene = new THREE.Scene()
@@ -139,6 +140,8 @@ render()
 document.addEventListener 'mousemove', (e) ->
   obj.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
 
-document.addEventListener 'click', (e) ->
-  t = addTetra(Math.random()*0.5)
-  obj.add(t.getMesh())
+document.addEventListener 'keydown', (e) ->
+  for n in [0..5]
+    after n*100, ->
+      t = addTetra(Math.random()*0.5)
+      obj.add(t.getMesh())
