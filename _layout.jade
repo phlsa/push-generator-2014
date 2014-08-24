@@ -1,0 +1,10 @@
+doctype
+html
+  head
+    link(rel="stylesheet", href="/main.css")
+    script(src="lib/underscore.js")
+    script(src="lib/three.min.js")
+    script(src="lib/convex-geometry.js")
+  body
+    != yield
+    script(src="generator.js")
