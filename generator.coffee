@@ -153,6 +153,7 @@ document.addEventListener 'mousemove', (e) ->
   rotationBox.rotation.y = (e.clientX / window.innerWidth - 0.5) * 3
 
 document.addEventListener 'keydown', (e) ->
+  console.log e.keyCode
   for n in [0..5]
     after n*100, ->
       t = addTetra(Math.random()*0.5)
