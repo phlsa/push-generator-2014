@@ -79,7 +79,7 @@ scene = new THREE.Scene()
 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
-document.body.appendChild(renderer.domElement);
+document.body.appendChild(renderer.domElement)
 
 # Materials
 materials = [
@@ -92,19 +92,22 @@ randomMaterial = ->
 camera.position.z = 3
 
 # Lights
-scene.add(new THREE.AmbientLight 0x111111)
+lightBox = new THREE.Object3D()
+# lightBox.add(new THREE.AmbientLight 0x111111)
 l1 = new THREE.PointLight(0xffffff, 1, 100)
 l1.position.set(0, 0.5, 1)
-scene.add(l1)
+lightBox.add(l1)
 l2 = new THREE.PointLight(0xffffff, 1, 100)
 l2.position.set(1, 0.5, 0)
-scene.add(l2)
+lightBox.add(l2)
 l3 = new THREE.PointLight(0xffffff, 1, 100)
 l3.position.set(-0.5, -0.5, -3)
-scene.add(l3)
+lightBox.add(l3)
 l4 = new THREE.PointLight(0xffffff, 1, 100)
 l4.position.set(0.5, 0.5, 3)
-scene.add(l4)
+lightBox.add(l4)
+
+scene.add(lightBox)
 
 # Set up geometry
 f1 = new Face(
@@ -112,36 +115,45 @@ f1 = new Face(
   new THREE.Vector3(0, 0.5, 0),
   new THREE.Vector3(0.5, 0.5, 0.5))
 
-obj = new THREE.Object3D()
+# Create the object that holds all meshes
+meshBox = new THREE.Object3D()
 tetras = []
 tetras.push new Tetra(f1, 0.3)
-obj.add(tetras[0].getMesh())
+meshBox.add(tetras[0].getMesh())
 for n in [0..1]
   t = addTetra(Math.random()*0.5)
-  obj.add(t.getMesh())
+  meshBox.add(t.getMesh())
 
-scene.add(obj)
+# Create boxes for centering the meshes
+bbox = new THREE.BoundingBoxHelper(meshBox, 0xffffff)
+rotationBox = new THREE.Object3D()
+rotationBox.add(meshBox)
 
-bbox = new THREE.BoundingBoxHelper( obj, 0xffffff )
-#scene.add( bbox );
+scene.add(rotationBox)
+# rotationBox.add( bbox )
 
 
 # Rendering
 render = -> 
   requestAnimationFrame(render)
   _.each tetras, (item) -> item.tick()
-  obj.rotation.y += 0.01
+  # rotationBox.rotation.y += 0.01
+  lightBox.rotation.y += 0.02
   bbox.update()
+  # meshBox.position.x = -bbox.box.size().x/4
+  # meshBox.position.y = -bbox.box.size().y/4
+  # meshBox.position.z = -bbox.box.size().z/4
   renderer.render(scene, camera)
 
 render()
 
 # Interaction
 document.addEventListener 'mousemove', (e) ->
-  obj.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
+  rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
+  rotationBox.rotation.y = (e.clientX / window.innerWidth - 0.5) * 3
 
 document.addEventListener 'keydown', (e) ->
   for n in [0..5]
     after n*100, ->
       t = addTetra(Math.random()*0.5)
-      obj.add(t.getMesh())
+      meshBox.add(t.getMesh())
