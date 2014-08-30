@@ -138,7 +138,7 @@ render = ->
   requestAnimationFrame(render)
   _.each tetras, (item) -> item.tick()
   # rotationBox.rotation.y += 0.01
-  lightBox.rotation.y += 0.02
+  lightBox.rotation.y += 0.01
   bbox.update()
   # meshBox.position.x = -bbox.box.size().x/4
   # meshBox.position.y = -bbox.box.size().y/4
@@ -153,8 +153,10 @@ document.addEventListener 'mousemove', (e) ->
   rotationBox.rotation.y = (e.clientX / window.innerWidth - 0.5) * 3
 
 document.addEventListener 'keydown', (e) ->
-  console.log e.keyCode
-  for n in [0..5]
-    after n*100, ->
-      t = addTetra(Math.random()*0.5)
+  return if e.key.length > 1
+  frequencies = Language.getChar(e.key.toLowerCase())
+  _.each frequencies, (freq, index) ->
+    after index*50, ->
+      t = addTetra(freq)
       meshBox.add(t.getMesh())
+
