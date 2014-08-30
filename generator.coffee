@@ -68,11 +68,39 @@ class Tetra
 addTetra = (elevation) ->
   prev = _.last tetras
   side = Math.floor(Math.random()*3) + 1
+  dists = _.map [1,2,3], (item) ->
+    dist(meshCenter, prev.face(item).m())
+  _.each dists, (item, index) ->
+    if index is 0
+      side = 0
+    else
+      if item > dists[index-1]
+        side = index
+  side += 1
+  console.log side
   newTetra = new Tetra prev.face(side), elevation
   tetras.push newTetra
   return newTetra
 
 after = (t, fn) -> window.setTimeout(fn, t)
+
+# Utility functions
+dist = (a, b) ->
+  dx = a.x - b.x
+  dy = a.y - b.y
+  dz = a.z - b.z
+  return Math.abs Math.sqrt(dx*dx + dy*dy + dz*dz)
+
+centerOf = (obj) ->
+  totalX = 0
+  totalY = 0
+  totalZ = 0
+  _.each obj.children, (item, index) ->
+    c = item.geometry.center()
+    totalX += c.x
+    totalY += c.y
+    totalZ += c.z
+  return { x: totalX/obj.children.length, y: totalY/obj.children.length, z: totalZ/obj.children.length }
 
 # Scene Setup
 scene = new THREE.Scene()
@@ -117,6 +145,7 @@ f1 = new Face(
 
 # Create the object that holds all meshes
 meshBox = new THREE.Object3D()
+meshCenter = {x:0, y:0, z:0}
 tetras = []
 tetras.push new Tetra(f1, 0.3)
 meshBox.add(tetras[0].getMesh())
@@ -139,7 +168,7 @@ render = ->
   _.each tetras, (item) -> item.tick()
   # rotationBox.rotation.y += 0.01
   lightBox.rotation.y += 0.01
-  bbox.update()
+  # bbox.update()
   # meshBox.position.x = -bbox.box.size().x/4
   # meshBox.position.y = -bbox.box.size().y/4
   # meshBox.position.z = -bbox.box.size().z/4
