@@ -1,3 +1,8 @@
+fullString = ""
+visibleString = ""
+letterQueue = []
+
+
 class Face
   constructor: (a, b, c) ->
     @a = -> return a
@@ -117,7 +122,8 @@ materials = [
   new THREE.MeshLambertMaterial(color: 0xC50265),
   new THREE.MeshLambertMaterial(color: 0x00D0D0)]
 randomMaterial = ->
-  n = Math.floor Math.random()*(materials.length)
+  # n = Math.floor Math.random()*(materials.length)
+  n = visibleString.length % 3
   return materials[n]
 camera.position.z = 3
 
@@ -168,22 +174,18 @@ scene.add(rotationBox)
 render = -> 
   requestAnimationFrame(render)
   _.each tetras, (item) -> item.tick()
-  # rotationBox.rotation.y += 0.01
+  rotationBox.rotation.y += 0.01
   lightBox.rotation.y += 0.01
-  # bbox.update()
-  # meshBox.position.x = -bbox.box.size().x/4
-  # meshBox.position.y = -bbox.box.size().y/4
-  # meshBox.position.z = -bbox.box.size().z/4
   renderer.render(scene, camera)
 
 render()
 
-letterQueue = []
+
 nextLetter = ->
   return if letterQueue.length is 0
 
-  l = _.first letterQueue
-  frequencies = Language.getChar(l.toLowerCase())
+  l = letterQueue[0]
+  frequencies = Language.getChar(l)
   frequencies = [frequencies[0], frequencies[1], frequencies[2]]
 
   # meshCenter = centerOf(meshBox)
@@ -196,6 +198,7 @@ nextLetter = ->
   
   #resume once the letter is finished
   after frequencies.length*50, ->
+    visibleString += letterQueue[0]
     letterQueue.splice(0, 1)
     nextLetter()
 
@@ -206,7 +209,9 @@ document.addEventListener 'mousemove', (e) ->
 
 document.addEventListener 'keyup', (e) ->
   return if e.key.length > 1
-  letterQueue.push(e.key)
+  key = e.key.toLowerCase()
+  fullString += key
+  letterQueue.push(key)
   nextLetter() if letterQueue.length is 1
   
 
