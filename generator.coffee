@@ -56,6 +56,7 @@ class Tetra
     return @mesh
 
   tick: ->
+    # @inflation = 1
     if @inflation < 1
       @inflation += 0.05
       #@mesh.scale.x = @mesh.scale.y = @mesh.scale.z = @inflation
@@ -65,19 +66,20 @@ class Tetra
         return null
 
 
-addTetra = (elevation) ->
-  prev = _.last tetras
+addTetra = (elevation, prev) ->
+  prev = _.last tetras unless prev?
   side = Math.floor(Math.random()*3) + 1
-  dists = _.map [1,2,3], (item) ->
-    dist(meshCenter, prev.face(item).m())
-  _.each dists, (item, index) ->
-    if index is 0
-      side = 0
-    else
-      if item > dists[index-1]
-        side = index
-  side += 1
-  console.log side
+  # dists = _.map [1,2,3], (item) ->
+  #   dist(meshCenter, prev.face(item).m())
+  # _.each dists, (item, index) ->
+  #   if index is 0
+  #     side = 0
+  #   else
+  #     if item > dists[index-1]
+  #       side = index
+  # side += 1
+  # console.log side
+  side = tetras.length % 3 + 1
   newTetra = new Tetra prev.face(side), elevation
   tetras.push newTetra
   return newTetra
@@ -150,7 +152,7 @@ tetras = []
 tetras.push new Tetra(f1, 0.3)
 meshBox.add(tetras[0].getMesh())
 for n in [0..1]
-  t = addTetra(Math.random()*0.5)
+  t = addTetra(1)
   meshBox.add(t.getMesh())
 
 # Create boxes for centering the meshes
@@ -176,16 +178,35 @@ render = ->
 
 render()
 
-# Interaction
-document.addEventListener 'mousemove', (e) ->
-  rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
-  rotationBox.rotation.y = (e.clientX / window.innerWidth - 0.5) * 3
+letterQueue = []
+nextLetter = ->
+  return if letterQueue.length is 0
 
-document.addEventListener 'keydown', (e) ->
-  return if e.key.length > 1
-  frequencies = Language.getChar(e.key.toLowerCase())
+  l = _.first letterQueue
+  frequencies = Language.getChar(l.toLowerCase())
+  frequencies = [frequencies[0], frequencies[1], frequencies[2]]
+
+  # meshCenter = centerOf(meshBox)
+  # console.log meshCenter
+  baseTetra = _.last(tetras)
   _.each frequencies, (freq, index) ->
     after index*50, ->
-      t = addTetra(freq)
+      t = addTetra(freq, baseTetra)
       meshBox.add(t.getMesh())
+  
+  #resume once the letter is finished
+  after frequencies.length*50, ->
+    letterQueue.splice(0, 1)
+    nextLetter()
+
+# Interaction
+document.addEventListener 'mousemove', (e) ->
+  #rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
+  #rotationBox.rotation.y = (e.clientX / window.innerWidth - 0.5) * 3
+
+document.addEventListener 'keyup', (e) ->
+  return if e.key.length > 1
+  letterQueue.push(e.key)
+  nextLetter() if letterQueue.length is 1
+  
 
