@@ -57,6 +57,14 @@ class Tetra
     unless @mesh?
       this.updateGeometry()
       @mesh = new THREE.Mesh(@geometry, randomMaterial())
+
+      # EXPERIMENTAL
+      _.each @geometry.faces, (f, i) ->
+        Colors.setGradientForFace f, visibleString.length % 3
+      #@geometry.faces[0].vertexColors[0] = new THREE.Color(0xFF0000)
+      # /EXPERIMENTAL
+
+
       @mesh.translateOnAxis(@base.normal, 2)
     return @mesh
 
@@ -69,6 +77,22 @@ class Tetra
     else
       this.tick = ->
         return null
+
+
+Colors =
+  setGradientForFace: (f, index) ->
+    if index is 0
+      f.vertexColors[0] = new THREE.Color(0xFF781C)
+      f.vertexColors[1] = new THREE.Color(0xC50265)
+      f.vertexColors[2] = new THREE.Color(0xC50265)
+    else if index is 1
+      f.vertexColors[0] = new THREE.Color(0x00D0D0)
+      f.vertexColors[1] = new THREE.Color(0xFF781C)
+      f.vertexColors[2] = new THREE.Color(0xFF781C)
+    else
+      f.vertexColors[0] = new THREE.Color(0xC50265)
+      f.vertexColors[1] = new THREE.Color(0x00D0D0)
+      f.vertexColors[2] = new THREE.Color(0x00D0D0)
 
 
 addTetra = (elevation, prev) ->
@@ -117,10 +141,14 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 # Materials
+# materials = [
+#   new THREE.MeshLambertMaterial(color: 0xFF781C, shading: THREE.FlatShading, vertexColors: THREE.VertexColors),
+#   new THREE.MeshLambertMaterial(color: 0xC50265, shading: THREE.FlatShading, vertexColors: THREE.VertexColors),
+#   new THREE.MeshLambertMaterial(color: 0x00D0D0, shading: THREE.FlatShading, vertexColors: THREE.VertexColors)]
 materials = [
-  new THREE.MeshLambertMaterial(color: 0xFF781C),
-  new THREE.MeshLambertMaterial(color: 0xC50265),
-  new THREE.MeshLambertMaterial(color: 0x00D0D0)]
+  new THREE.MeshLambertMaterial(shading: THREE.PhongShading, vertexColors: THREE.VertexColors),
+  new THREE.MeshLambertMaterial(shading: THREE.PhongShading, vertexColors: THREE.VertexColors),
+  new THREE.MeshLambertMaterial(shading: THREE.PhongShading, vertexColors: THREE.VertexColors)]
 randomMaterial = ->
   # n = Math.floor Math.random()*(materials.length)
   n = visibleString.length % 3
@@ -203,9 +231,16 @@ nextLetter = ->
     nextLetter()
 
 # Interaction
+prevMouse = x:0 ,y:0
+
 document.addEventListener 'mousemove', (e) ->
   #rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
   #rotationBox.rotation.y = (e.clientX / window.innerWidth - 0.5) * 3
+  xOff = e.clientX - prevMouse.x
+  yOff = e.clientY - prevMouse.y
+  prevMouse = x:e.clientX, y:e.clientY
+  rotationBox.rotation.x += yOff/window.innerHeight
+  rotationBox.rotation.y += xOff/window.innerWidth
 
 document.addEventListener 'keyup', (e) ->
   return if e.key.length > 1
