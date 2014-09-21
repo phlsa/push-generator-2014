@@ -1,4 +1,5 @@
 fullString = ""
+capturedString = ""
 visibleString = ""
 letterQueue = []
 animating = false
@@ -57,7 +58,7 @@ class Tetra
   getMesh: ->
     unless @mesh?
       this.updateGeometry()
-      material = new THREE.MeshLambertMaterial(shading: THREE.PhongShading, vertexColors: THREE.VertexColors)
+      material = new THREE.MeshBasicMaterial(shading: THREE.FlatShading, vertexColors: THREE.VertexColors)
       @mesh = new THREE.Mesh(@geometry, material)
 
       # EXPERIMENTAL
@@ -85,17 +86,17 @@ class Tetra
 Colors =
   setGradientForFace: (f, index) ->
     if index is 0
-      f.vertexColors[0] = new THREE.Color(0xFF781C)
-      f.vertexColors[1] = new THREE.Color(0xC50265)
-      f.vertexColors[2] = new THREE.Color(0xC50265)
-    else if index is 1
-      f.vertexColors[0] = new THREE.Color(0x00D0D0)
+      f.vertexColors[0] = new THREE.Color(0xC50265)
       f.vertexColors[1] = new THREE.Color(0xFF781C)
       f.vertexColors[2] = new THREE.Color(0xFF781C)
-    else
+    else if index is 1
       f.vertexColors[0] = new THREE.Color(0xC50265)
       f.vertexColors[1] = new THREE.Color(0x00D0D0)
       f.vertexColors[2] = new THREE.Color(0x00D0D0)
+    else
+      f.vertexColors[0] = new THREE.Color(0x000000)
+      f.vertexColors[1] = new THREE.Color(0x333333)
+      f.vertexColors[2] = new THREE.Color(0x333333)
 
 
 addTetra = (elevation, prev) ->
@@ -114,32 +115,30 @@ dist = (a, b) ->
   dy = a.y - b.y
   dz = a.z - b.z
   return Math.abs Math.sqrt(dx*dx + dy*dy + dz*dz)
-  
+
 
 # Scene Setup
 scene = new THREE.Scene()
-camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-renderer = new THREE.WebGLRenderer()
+renderer = new THREE.WebGLRenderer({alpha: true})
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-camera.position.z = 3
 
 # Lights
 lightBox = new THREE.Object3D()
-# lightBox.add(new THREE.AmbientLight 0x111111)
-l1 = new THREE.PointLight(0xffffff, 1, 100)
-l1.position.set(0, 0.5, 1)
-lightBox.add(l1)
-l2 = new THREE.PointLight(0xffffff, 1, 100)
-l2.position.set(1, 0.5, 0)
-lightBox.add(l2)
-l3 = new THREE.PointLight(0xffffff, 1, 100)
-l3.position.set(-0.5, -0.5, -3)
-lightBox.add(l3)
-l4 = new THREE.PointLight(0xffffff, 1, 100)
-l4.position.set(0.5, 0.5, 3)
-lightBox.add(l4)
+# # lightBox.add(new THREE.AmbientLight 0x111111)
+# l1 = new THREE.PointLight(0xffffff, 1, 100)
+# l1.position.set(0, 0.5, 1)
+# lightBox.add(l1)
+# l2 = new THREE.PointLight(0xffffff, 1, 100)
+# l2.position.set(1, 0.5, 0)
+# lightBox.add(l2)
+# l3 = new THREE.PointLight(0xffffff, 1, 100)
+# l3.position.set(-0.5, -0.5, -3)
+# lightBox.add(l3)
+# l4 = new THREE.PointLight(0xffffff, 1, 100)
+# l4.position.set(0.5, 0.5, 3)
+# lightBox.add(l4)
 
 scene.add(lightBox)
 
@@ -166,7 +165,7 @@ scene.add(rotationBox)
 
 # Camera setup
 camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 )
-camera.position.z = 5
+camera.position.z = 3
 rotationBox.add( camera )
 
 bbox = new THREE.BoundingBoxHelper(meshBox)
@@ -176,17 +175,17 @@ render = ->
   requestAnimationFrame(render)
   _.each tetras, (item) -> item.tick()
   rotationBox.rotation.y += 0.01
-  lightBox.rotation.y += 0.01
+  lightBox.rotation.y -= 0.01
 
   # Camera testing
   unless animating
-    # Zooming
+    # Positioning
     bbox.update()
     c = bbox.box.center()
     rc = rotationBox.position
     rotationBox.position.set rc.x+(c.x-rc.x)/5, rc.y+(c.y-rc.y)/7, rc.z+(c.z-rc.z)/7
 
-    # Positioning
+    # Zooming
     size = bbox.box.size().x
     size = 3 if size < 3
     dist =  size / (Math.sin( camera.fov * (Math.PI/180) / 2) )
@@ -198,9 +197,19 @@ render()
 
 
 nextLetter = ->
-  return if letterQueue.length is 0
+  # return if letterQueue.length is 0
+  # letterQueue = _.toArray fullString.substring(visibleString.length, fullString.length)
+  # console.log letterQueue
+  # console.log visibleString
+  # console.log fullString
+  # return if letterQueue.length is 0
 
-  l = letterQueue[0]
+  # l = letterQueue[0]
+
+  return if fullString is capturedString
+  l = fullString[capturedString.length]
+  capturedString += l
+
   frequencies = Language.getChar(l)
   frequencies = [frequencies[0], frequencies[1], frequencies[2]]
 
@@ -212,22 +221,25 @@ nextLetter = ->
   
   #resume once the letter is finished
   after frequencies.length*50, ->
-    visibleString += letterQueue[0]
+    visibleString += l
     letterQueue.splice(0, 1)
     nextLetter()
 
 # Interaction
-prevMouse = x:0 ,y:0
+input = document.getElementById('generator-input')
+input.value = ""
+input.focus()
 
 document.addEventListener 'mousemove', (e) ->
   rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
 
 
-document.addEventListener 'keyup', (e) ->
-  return if e.key.length > 1
-  key = e.key.toLowerCase()
-  fullString += key
-  letterQueue.push(key)
-  nextLetter() if letterQueue.length is 1
-  
+input.addEventListener 'input', (e) ->
+  str = e.currentTarget.value
+  if str.substr(0, fullString.length) isnt fullString
+    input.value = fullString
+  else
+    fullString = str
+  nextLetter()
+
 
