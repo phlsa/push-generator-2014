@@ -165,7 +165,7 @@ scene.add(rotationBox)
 
 # Camera setup
 camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 )
-camera.position.z = 3
+camera.position.z = 10
 rotationBox.add( camera )
 
 bbox = new THREE.BoundingBoxHelper(meshBox)
@@ -197,15 +197,6 @@ render()
 
 
 nextLetter = ->
-  # return if letterQueue.length is 0
-  # letterQueue = _.toArray fullString.substring(visibleString.length, fullString.length)
-  # console.log letterQueue
-  # console.log visibleString
-  # console.log fullString
-  # return if letterQueue.length is 0
-
-  # l = letterQueue[0]
-
   return if fullString is capturedString
   l = fullString[capturedString.length]
   capturedString += l
@@ -227,8 +218,12 @@ nextLetter = ->
 
 # Interaction
 input = document.getElementById('generator-input')
-input.value = ""
+input.value = getURLText()
 input.focus()
+
+if input.value isnt ""
+  fullString = input.value
+  nextLetter()
 
 document.addEventListener 'mousemove', (e) ->
   rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
@@ -240,6 +235,11 @@ input.addEventListener 'input', (e) ->
     input.value = fullString
   else
     fullString = str
+    updateLocationBar(fullString)
   nextLetter()
 
 
+reset = document.getElementById('generator-reset')
+reset.addEventListener 'click', (e) ->
+  url = location.protocol + '//' + location.host + location.pathname
+  window.location.href = url
