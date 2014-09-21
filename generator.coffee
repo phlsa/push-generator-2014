@@ -56,7 +56,8 @@ class Tetra
   getMesh: ->
     unless @mesh?
       this.updateGeometry()
-      @mesh = new THREE.Mesh(@geometry, randomMaterial())
+      material = new THREE.MeshLambertMaterial(shading: THREE.PhongShading, vertexColors: THREE.VertexColors)
+      @mesh = new THREE.Mesh(@geometry, material)
 
       # EXPERIMENTAL
       _.each @geometry.faces, (f, i) ->
@@ -140,19 +141,6 @@ renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-# Materials
-# materials = [
-#   new THREE.MeshLambertMaterial(color: 0xFF781C, shading: THREE.FlatShading, vertexColors: THREE.VertexColors),
-#   new THREE.MeshLambertMaterial(color: 0xC50265, shading: THREE.FlatShading, vertexColors: THREE.VertexColors),
-#   new THREE.MeshLambertMaterial(color: 0x00D0D0, shading: THREE.FlatShading, vertexColors: THREE.VertexColors)]
-materials = [
-  new THREE.MeshLambertMaterial(shading: THREE.PhongShading, vertexColors: THREE.VertexColors),
-  new THREE.MeshLambertMaterial(shading: THREE.PhongShading, vertexColors: THREE.VertexColors),
-  new THREE.MeshLambertMaterial(shading: THREE.PhongShading, vertexColors: THREE.VertexColors)]
-randomMaterial = ->
-  # n = Math.floor Math.random()*(materials.length)
-  n = visibleString.length % 3
-  return materials[n]
 camera.position.z = 3
 
 # Lights
@@ -190,13 +178,10 @@ for n in [0..1]
   meshBox.add(t.getMesh())
 
 # Create boxes for centering the meshes
-bbox = new THREE.BoundingBoxHelper(meshBox, 0xffffff)
 rotationBox = new THREE.Object3D()
 rotationBox.add(meshBox)
 
 scene.add(rotationBox)
-# rotationBox.add( bbox )
-
 
 # Rendering
 render = -> 
@@ -223,6 +208,8 @@ nextLetter = ->
     after index*50, ->
       t = addTetra(freq, baseTetra)
       meshBox.add(t.getMesh())
+      # Scale the mesh when more tetras get added
+      meshBox.scale.set meshBox.scale.x * 0.995, meshBox.scale.y * 0.995, meshBox.scale.z * 0.995
   
   #resume once the letter is finished
   after frequencies.length*50, ->
@@ -236,11 +223,21 @@ prevMouse = x:0 ,y:0
 document.addEventListener 'mousemove', (e) ->
   #rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
   #rotationBox.rotation.y = (e.clientX / window.innerWidth - 0.5) * 3
-  xOff = e.clientX - prevMouse.x
+  #xOff = e.clientX - prevMouse.x
   yOff = e.clientY - prevMouse.y
   prevMouse = x:e.clientX, y:e.clientY
-  rotationBox.rotation.x += yOff/window.innerHeight
-  rotationBox.rotation.y += xOff/window.innerWidth
+  #rotationBox.rotation.x += yOff/window.innerHeight
+  #rotationBox.rotation.y += xOff/window.innerWidth
+  #meshBox.position.x = 2.5 - e.clientX/window.innerWidth*5
+  #meshBox.geometry.computeBoundingBox()
+  #console.log meshBox
+
+  ###
+  How to get to the bounding box
+  - Calculate centre points of all meshes (tetras)
+  - average them
+  - Done
+  ###
 
 document.addEventListener 'keyup', (e) ->
   return if e.key.length > 1
