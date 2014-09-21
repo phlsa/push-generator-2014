@@ -75,7 +75,6 @@ class Tetra
     animating = true
     if @inflation < 1
       @inflation += 0.05
-      #@mesh.scale.x = @mesh.scale.y = @mesh.scale.z = @inflation
       @mesh.translateOnAxis(@base.normal, -0.05*2)
     else
       animating = false
@@ -102,16 +101,6 @@ Colors =
 addTetra = (elevation, prev) ->
   prev = _.last tetras unless prev?
   side = Math.floor(Math.random()*3) + 1
-  # dists = _.map [1,2,3], (item) ->
-  #   dist(meshCenter, prev.face(item).m())
-  # _.each dists, (item, index) ->
-  #   if index is 0
-  #     side = 0
-  #   else
-  #     if item > dists[index-1]
-  #       side = index
-  # side += 1
-  # console.log side
   side = tetras.length % 3 + 1
   newTetra = new Tetra prev.face(side), elevation
   tetras.push newTetra
@@ -125,17 +114,7 @@ dist = (a, b) ->
   dy = a.y - b.y
   dz = a.z - b.z
   return Math.abs Math.sqrt(dx*dx + dy*dy + dz*dz)
-
-centerOf = (obj) ->
-  totalX = 0
-  totalY = 0
-  totalZ = 0
-  _.each obj.children, (item, index) ->
-    c = item.geometry.center()
-    totalX += c.x
-    totalY += c.y
-    totalZ += c.z
-  return { x: totalX/obj.children.length, y: totalY/obj.children.length, z: totalZ/obj.children.length }
+  
 
 # Scene Setup
 scene = new THREE.Scene()
@@ -198,22 +177,21 @@ render = ->
   _.each tetras, (item) -> item.tick()
   rotationBox.rotation.y += 0.01
   lightBox.rotation.y += 0.01
-  # unless animating
-  #   c = centerOf(meshBox)
-  #   meshBox.position.set(c.x, c.y, c.z)
 
   # Camera testing
-  # Zoom and centerpoint stuff
   unless animating
+    # Zooming
     bbox.update()
     c = bbox.box.center()
     rc = rotationBox.position
     rotationBox.position.set rc.x+(c.x-rc.x)/5, rc.y+(c.y-rc.y)/7, rc.z+(c.z-rc.z)/7
 
+    # Positioning
     size = bbox.box.size().x
     size = 3 if size < 3
     dist =  size / (Math.sin( camera.fov * (Math.PI/180) / 2) )
     camera.position.z = camera.position.z-(camera.position.z-dist)/5
+  
   renderer.render(scene, camera)
 
 render()
@@ -226,21 +204,11 @@ nextLetter = ->
   frequencies = Language.getChar(l)
   frequencies = [frequencies[0], frequencies[1], frequencies[2]]
 
-  # meshCenter = centerOf(meshBox)
-  # console.log meshCenter
   baseTetra = _.last(tetras)
   _.each frequencies, (freq, index) ->
     after index*50, ->
       t = addTetra(freq, baseTetra)
       meshBox.add(t.getMesh())
-      # Scale the mesh when more tetras get added
-      # meshBox.scale.set meshBox.scale.x * 0.995, meshBox.scale.y * 0.995, meshBox.scale.z * 0.995
-      # Movement experiment
-      #vecToLastTetra = _.last( _.filter(tetras, (v) -> v.inflation >=1) ).base.m()
-      #meshBox.translateOnAxis(vecToLastTetra, -vecToLastTetra.length()/50)
-      # TODO
-      # - get exact amount of translation (or make a better guess)
-      # - always calculate the distance from the last finished object
   
   #resume once the letter is finished
   after frequencies.length*50, ->
@@ -252,23 +220,8 @@ nextLetter = ->
 prevMouse = x:0 ,y:0
 
 document.addEventListener 'mousemove', (e) ->
-  #rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
-  #rotationBox.rotation.y = (e.clientX / window.innerWidth - 0.5) * 3
-  #xOff = e.clientX - prevMouse.x
-  yOff = e.clientY - prevMouse.y
-  prevMouse = x:e.clientX, y:e.clientY
-  #rotationBox.rotation.x += yOff/window.innerHeight
-  #rotationBox.rotation.y += xOff/window.innerWidth
-  #meshBox.position.x = 2.5 - e.clientX/window.innerWidth*5
-  #meshBox.geometry.computeBoundingBox()
-  #console.log meshBox
+  rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
 
-  ###
-  How to get to the bounding box
-  - Calculate centre points of all meshes (tetras)
-  - average them
-  - Done
-  ###
 
 document.addEventListener 'keyup', (e) ->
   return if e.key.length > 1
