@@ -1,6 +1,7 @@
 fullString = ""
 visibleString = ""
 letterQueue = []
+animating = false
 
 
 class Face
@@ -71,11 +72,13 @@ class Tetra
 
   tick: ->
     # @inflation = 1
+    animating = true
     if @inflation < 1
       @inflation += 0.05
       #@mesh.scale.x = @mesh.scale.y = @mesh.scale.z = @inflation
       @mesh.translateOnAxis(@base.normal, -0.05*2)
     else
+      animating = false
       this.tick = ->
         return null
 
@@ -179,9 +182,15 @@ for n in [0..1]
 
 # Create boxes for centering the meshes
 rotationBox = new THREE.Object3D()
-rotationBox.add(meshBox)
-
+scene.add(meshBox)
 scene.add(rotationBox)
+
+# Camera setup
+camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 )
+camera.position.z = 5
+rotationBox.add( camera )
+
+bbox = new THREE.BoundingBoxHelper(meshBox)
 
 # Rendering
 render = -> 
@@ -189,6 +198,20 @@ render = ->
   _.each tetras, (item) -> item.tick()
   rotationBox.rotation.y += 0.01
   lightBox.rotation.y += 0.01
+  # unless animating
+  #   c = centerOf(meshBox)
+  #   meshBox.position.set(c.x, c.y, c.z)
+
+  # Camera testing
+  # Zoom and centerpoint stuff
+  unless animating
+    bbox.update()
+    c = bbox.box.center()
+    rc = rotationBox.position
+    rotationBox.position.set rc.x+(c.x-rc.x)/5, rc.y+(c.y-rc.y)/7, rc.z+(c.z-rc.z)/7
+
+    dist =  bbox.box.size().x / (Math.sin( camera.fov * (Math.PI/180) / 2) )
+    camera.position.z = camera.position.z-(camera.position.z-dist)/5
   renderer.render(scene, camera)
 
 render()
@@ -209,7 +232,13 @@ nextLetter = ->
       t = addTetra(freq, baseTetra)
       meshBox.add(t.getMesh())
       # Scale the mesh when more tetras get added
-      meshBox.scale.set meshBox.scale.x * 0.995, meshBox.scale.y * 0.995, meshBox.scale.z * 0.995
+      # meshBox.scale.set meshBox.scale.x * 0.995, meshBox.scale.y * 0.995, meshBox.scale.z * 0.995
+      # Movement experiment
+      #vecToLastTetra = _.last( _.filter(tetras, (v) -> v.inflation >=1) ).base.m()
+      #meshBox.translateOnAxis(vecToLastTetra, -vecToLastTetra.length()/50)
+      # TODO
+      # - get exact amount of translation (or make a better guess)
+      # - always calculate the distance from the last finished object
   
   #resume once the letter is finished
   after frequencies.length*50, ->
