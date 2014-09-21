@@ -210,7 +210,9 @@ render = ->
     rc = rotationBox.position
     rotationBox.position.set rc.x+(c.x-rc.x)/5, rc.y+(c.y-rc.y)/7, rc.z+(c.z-rc.z)/7
 
-    dist =  bbox.box.size().x / (Math.sin( camera.fov * (Math.PI/180) / 2) )
+    size = bbox.box.size().x
+    size = 3 if size < 3
+    dist =  size / (Math.sin( camera.fov * (Math.PI/180) / 2) )
     camera.position.z = camera.position.z-(camera.position.z-dist)/5
   renderer.render(scene, camera)
 
