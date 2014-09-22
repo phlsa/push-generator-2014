@@ -118,10 +118,12 @@ dist = (a, b) ->
 
 
 # Scene Setup
+parentElement = document.getElementById('generator-main')
+
 scene = new THREE.Scene()
 renderer = new THREE.WebGLRenderer({alpha: true})
-renderer.setSize(window.innerWidth, window.innerHeight)
-document.body.appendChild(renderer.domElement)
+renderer.setSize(parentElement.offsetWidth, (parentElement.offsetWidth/16)*9)
+parentElement.appendChild(renderer.domElement)
 
 
 # Lights
