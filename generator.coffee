@@ -1,6 +1,6 @@
 config = 
   autoCamera: true
-  autoRotate: true
+  autoRotate: false
 
 fullString = ""
 capturedString = ""
@@ -180,8 +180,10 @@ bbox = new THREE.BoundingBoxHelper(meshBox)
 render = -> 
   requestAnimationFrame(render)
   _.each tetras, (item) -> item.tick()
-  rotationBox.rotation.y += 0.01
-  lightBox.rotation.y -= 0.01
+  
+  if config.autoRotate
+    rotationBox.rotation.y += 0.01
+  # lightBox.rotation.y -= 0.01
 
   # Camera testing
   unless animating
@@ -246,6 +248,12 @@ else
       rotationBox.rotation.y += (e.clientX-pMouse.x) * 0.01
       rotationBox.rotation.x += (e.clientY-pMouse.y) * 0.01
       pMouse = {x: e.clientX, y: e.clientY}
+
+  document.addEventListener 'keydown', (e) ->
+    if e.keyCode is 38 #UP
+      rotationBox.rotation.z -= 0.1
+    else if e.keyCode is 40 #DOWN
+      rotationBox.rotation.z += 0.1
 
 input.addEventListener 'input', (e) ->
   str = e.currentTarget.value
