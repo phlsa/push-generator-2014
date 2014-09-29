@@ -1,3 +1,7 @@
+config = 
+  autoCamera: true
+  autoRotate: true
+
 fullString = ""
 capturedString = ""
 visibleString = ""
@@ -63,7 +67,7 @@ class Tetra
 
       # EXPERIMENTAL
       _.each @geometry.faces, (f, i) ->
-        Colors.setGradientForFace f, visibleString.length % 3
+        Colors.setGradientForFace f, visibleString.length % 2
       #@geometry.faces[0].vertexColors[0] = new THREE.Color(0xFF0000)
       # /EXPERIMENTAL
 
@@ -89,14 +93,14 @@ Colors =
       f.vertexColors[0] = new THREE.Color(0xC50265)
       f.vertexColors[1] = new THREE.Color(0xFF781C)
       f.vertexColors[2] = new THREE.Color(0xFF781C)
-    else if index is 1
+    else #if index is 1
       f.vertexColors[0] = new THREE.Color(0xC50265)
       f.vertexColors[1] = new THREE.Color(0x00D0D0)
       f.vertexColors[2] = new THREE.Color(0x00D0D0)
-    else
-      f.vertexColors[0] = new THREE.Color(0x000000)
-      f.vertexColors[1] = new THREE.Color(0x333333)
-      f.vertexColors[2] = new THREE.Color(0x333333)
+    # else
+    #   f.vertexColors[0] = new THREE.Color(0x000000)
+    #   f.vertexColors[1] = new THREE.Color(0x333333)
+    #   f.vertexColors[2] = new THREE.Color(0x333333)
 
 
 addTetra = (elevation, prev) ->
@@ -227,9 +231,21 @@ if input.value isnt ""
   fullString = input.value
   nextLetter()
 
-document.addEventListener 'mousemove', (e) ->
-  rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
 
+pMouse = {x:0, y:0}
+
+if config.autoRotate
+  document.addEventListener 'mousemove', (e) ->
+    rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
+else
+  document.addEventListener 'mousedown', (e) ->
+    pMouse = {x: e.clientX, y: e.clientY}
+
+  document.addEventListener 'mousemove', (e) ->
+    if e.buttons isnt 0
+      rotationBox.rotation.y += (e.clientX-pMouse.x) * 0.01
+      rotationBox.rotation.x += (e.clientY-pMouse.y) * 0.01
+      pMouse = {x: e.clientX, y: e.clientY}
 
 input.addEventListener 'input', (e) ->
   str = e.currentTarget.value
