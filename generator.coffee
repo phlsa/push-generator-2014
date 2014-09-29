@@ -1,5 +1,5 @@
 config = 
-  autoCamera: true
+  autoCamera: false
   autoRotate: false
 
 fullString = ""
@@ -186,7 +186,7 @@ render = ->
   # lightBox.rotation.y -= 0.01
 
   # Camera testing
-  unless animating
+  unless animating or !config.autoCamera
     # Positioning
     bbox.update()
     c = bbox.box.center()
@@ -235,25 +235,41 @@ if input.value isnt ""
 
 
 pMouse = {x:0, y:0}
+document.addEventListener 'mousedown', (e) ->
+    pMouse = {x: e.clientX, y: e.clientY}
+
 
 if config.autoRotate
   document.addEventListener 'mousemove', (e) ->
     rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
 else
-  document.addEventListener 'mousedown', (e) ->
-    pMouse = {x: e.clientX, y: e.clientY}
-
   document.addEventListener 'mousemove', (e) ->
-    if e.buttons isnt 0
+    if e.buttons isnt 0 and e.shiftKey is true
       rotationBox.rotation.y += (e.clientX-pMouse.x) * 0.01
       rotationBox.rotation.x += (e.clientY-pMouse.y) * 0.01
-      pMouse = {x: e.clientX, y: e.clientY}
+    _.defer -> pMouse = {x: e.clientX, y: e.clientY}
 
   document.addEventListener 'keydown', (e) ->
     if e.keyCode is 38 #UP
       rotationBox.rotation.z -= 0.1
     else if e.keyCode is 40 #DOWN
       rotationBox.rotation.z += 0.1
+
+
+if not config.autoCamera
+  document.addEventListener 'mousemove', (e) ->
+    if e.buttons isnt 0
+      rotationBox.position.x += (pMouse.x-e.clientX) / (window.innerWidth / 2)
+      rotationBox.position.y += (e.clientY-pMouse.y) / (window.innerHeight / 2)
+    _.defer -> pMouse = {x: e.clientX, y: e.clientY}
+
+  document.addEventListener 'keydown', (e) ->
+    if e.key is 'c'
+      bbox.update()
+      c = bbox.box.center()
+      rc = rotationBox.position
+      rotationBox.position.set rc.x+(c.x-rc.x), rc.y+(c.y-rc.y), rc.z+(c.z-rc.z)
+
 
 input.addEventListener 'input', (e) ->
   str = e.currentTarget.value
