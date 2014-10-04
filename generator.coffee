@@ -125,27 +125,13 @@ dist = (a, b) ->
 parentElement = document.getElementById('generator-main')
 
 scene = new THREE.Scene()
-renderer = new THREE.WebGLRenderer({alpha: true})
+renderer = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true})
 renderer.setSize(parentElement.offsetWidth, (parentElement.offsetWidth/16)*9)
 parentElement.appendChild(renderer.domElement)
 
 
 # Lights
 lightBox = new THREE.Object3D()
-# # lightBox.add(new THREE.AmbientLight 0x111111)
-# l1 = new THREE.PointLight(0xffffff, 1, 100)
-# l1.position.set(0, 0.5, 1)
-# lightBox.add(l1)
-# l2 = new THREE.PointLight(0xffffff, 1, 100)
-# l2.position.set(1, 0.5, 0)
-# lightBox.add(l2)
-# l3 = new THREE.PointLight(0xffffff, 1, 100)
-# l3.position.set(-0.5, -0.5, -3)
-# lightBox.add(l3)
-# l4 = new THREE.PointLight(0xffffff, 1, 100)
-# l4.position.set(0.5, 0.5, 3)
-# lightBox.add(l4)
-
 scene.add(lightBox)
 
 # Set up geometry
@@ -285,3 +271,11 @@ reset = document.getElementById('generator-reset')
 reset.addEventListener 'click', (e) ->
   url = location.protocol + '//' + location.host + location.pathname
   window.location.href = url
+
+
+getStaticImageElement = ->
+  elem = Canvas2Image.saveAsPNG renderer.domElement, true, renderer.domElement.width, renderer.domElement.height
+  document.getElementById('generator-main').appendChild(elem)
+  return elem
+
+
