@@ -273,9 +273,15 @@ reset.addEventListener 'click', (e) ->
   window.location.href = url
 
 
-getStaticImageElement = ->
-  elem = Canvas2Image.saveAsPNG renderer.domElement, true, renderer.domElement.width, renderer.domElement.height
-  document.getElementById('generator-main').appendChild(elem)
-  return elem
+saveStaticImage = (name) ->
+  name = 'image-' + new Date().getTime() unless name?
+  dataObj = renderer.domElement.toDataURL('image/png')
+
+  $.post 'http://localhost/~psackl/generator-2014/saveImage.php', {
+      'data': dataObj,
+      'name': name,
+    }, (data) ->
+      console.log( data )
+
 
 
