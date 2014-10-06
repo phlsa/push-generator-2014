@@ -6,7 +6,7 @@ config =
   useAnimation: no
   magnification: 3    # only used when setting the zoom level at the end of the build
   forceCenterOnFinish: yes
-  saveFileOnFinish: yes
+  saveFileOnFinish: no
   autoDimensions: no
   dimensions:
     width: 500
@@ -17,6 +17,7 @@ capturedString = ""
 visibleString = ""
 letterQueue = []
 animating = false
+animationId = 0
 
 
 class Face
@@ -138,53 +139,64 @@ dist = (a, b) ->
 
 
 # Scene Setup
-parentElement = document.getElementById('generator-main')
+initScene = ->
+  console.log 'initializing scene'
+  # Clear existing scene
+  window.cancelAnimationFrame(animationId)
+  canv = document.getElementsByTagName('canvas')
+  canv[0].parentNode.removeChild(canv[0]) if canv[0]?
 
-scene = new THREE.Scene()
-renderer = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true})
-if config.autoDimensions
-  config.dimensions =
-    width: parentElement.offsetWidth
-    height: (parentElement.offsetWidth/16)*9
-renderer.setSize(config.dimensions.width, config.dimensions.height)
-parentElement.appendChild(renderer.domElement)
+  window.parentElement = document.getElementById('generator-main')
+
+  window.scene = new THREE.Scene()
+  window.renderer = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true})
+  if config.autoDimensions
+    config.dimensions =
+      width: parentElement.offsetWidth
+      height: (parentElement.offsetWidth/16)*9
+  renderer.setSize(config.dimensions.width, config.dimensions.height)
+  parentElement.appendChild(renderer.domElement)
 
 
-# Lights
-lightBox = new THREE.Object3D()
-scene.add(lightBox)
+  # Lights
+  window.lightBox = new THREE.Object3D()
+  scene.add(lightBox)
 
-# Set up geometry
-f1 = new Face(
-  new THREE.Vector3(0, 0, 0),
-  new THREE.Vector3(0, 0.5, 0),
-  new THREE.Vector3(0.5, 0.5, 0.5))
+  # Set up geometry
+  f1 = new Face(
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0.5, 0),
+    new THREE.Vector3(0.5, 0.5, 0.5))
 
-# Create the object that holds all meshes
-meshBox = new THREE.Object3D()
-meshCenter = {x:0, y:0, z:0}
-tetras = []
-tetras.push new Tetra(f1, 0.3)
-meshBox.add(tetras[0].getMesh())
-for n in [0..1]
-  t = addTetra(1)
-  meshBox.add(t.getMesh())
+  # Create the object that holds all meshes
+  window.meshBox = new THREE.Object3D()
+  window.meshCenter = {x:0, y:0, z:0}
+  window.tetras = []
+  tetras.push new Tetra(f1, 0.3)
+  meshBox.add(tetras[0].getMesh())
+  for n in [0..1]
+    t = addTetra(1)
+    meshBox.add(t.getMesh())
 
-# Create boxes for centering the meshes
-rotationBox = new THREE.Object3D()
-scene.add(meshBox)
-scene.add(rotationBox)
+  # Create boxes for centering the meshes
+  window.rotationBox = new THREE.Object3D()
+  scene.add(meshBox)
+  scene.add(rotationBox)
 
-# Camera setup
-camera = new THREE.PerspectiveCamera( 45, config.dimensions.width / config.dimensions.height, 0.1, 1000 )
-camera.position.z = 10
-rotationBox.add( camera )
+  # Camera setup
+  window.camera = new THREE.PerspectiveCamera( 45, config.dimensions.width / config.dimensions.height, 0.1, 1000 )
+  camera.position.z = 10
+  rotationBox.add( camera )
 
-bbox = new THREE.BoundingBoxHelper(meshBox)
+  window.bbox = new THREE.BoundingBoxHelper(meshBox)
+
+  # Kick off rendering
+  render()
+
 
 # Rendering
 render = -> 
-  requestAnimationFrame(render)
+  window.animationId = requestAnimationFrame(render)
   _.each tetras, (item) -> item.tick()
   
   if config.autoRotate
@@ -207,8 +219,6 @@ render = ->
   
   renderer.render(scene, camera)
 
-render()
-
 
 buildFinished = ->
   console.log 'build finished'
@@ -227,7 +237,10 @@ buildFinished = ->
     camera.position.z = dist/config.magnification
 
   if config.saveFileOnFinish
-    _.defer -> saveStaticImage(fullString)
+    _.defer ->
+      saveStaticImage(fullString)
+      window.actionAfterBuild() if window.actionAfterBuild?
+
 
 
 nextLetter = ->
@@ -261,6 +274,9 @@ nextLetter = ->
     letterQueue.splice(0, 1)
     nextLetter()
 
+# Initialize the scene
+initScene()
+
 # Interaction
 input = document.getElementById('generator-input')
 input.value = getURLText()
@@ -269,7 +285,6 @@ input.focus()
 if input.value isnt ""
   fullString = input.value
   nextLetter()
-
 
 pMouse = {x:0, y:0}
 document.addEventListener 'mousedown', (e) ->
@@ -318,10 +333,17 @@ input.addEventListener 'input', (e) ->
   nextLetter()
 
 
+# Reset
 reset = document.getElementById('generator-reset')
 reset.addEventListener 'click', (e) ->
   url = location.protocol + '//' + location.host + location.pathname
   window.location.href = url
+
+# Render Sequence
+document.getElementById('render-sequence').addEventListener 'click', (e) ->
+  e.preventDefault()
+  list = window.prompt('Enter names to be rendered separated by semicoli')
+  renderSequence(list.split(';'))
 
 
 saveStaticImage = (name) ->
@@ -334,3 +356,24 @@ saveStaticImage = (name) ->
     }, (data) ->
       console.log( data )
 
+
+renderSequence = (sequence) ->
+  config.saveFileOnFinish = yes
+
+  renderNext = ->
+    # reset all the strings
+    fullString = ""
+    capturedString = ""
+    visibleString = ""
+    letterQueue = []
+    
+    initScene()
+    fullString = sequence.splice(0, 1)[0]
+    console.log 'will render: ' + fullString
+    if sequence.length > 0
+      window.actionAfterBuild = renderNext
+    else
+      window.actionAfterBuild = null
+    nextLetter()
+
+  renderNext()
