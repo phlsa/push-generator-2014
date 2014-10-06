@@ -7,6 +7,10 @@ config =
   magnification: 3    # only used when setting the zoom level at the end of the build
   forceCenterOnFinish: yes
   saveFileOnFinish: yes
+  autoDimensions: no
+  dimensions:
+    width: 500
+    height: 500
 
 fullString = ""
 capturedString = ""
@@ -138,7 +142,11 @@ parentElement = document.getElementById('generator-main')
 
 scene = new THREE.Scene()
 renderer = new THREE.WebGLRenderer({alpha: true, preserveDrawingBuffer: true})
-renderer.setSize(parentElement.offsetWidth, (parentElement.offsetWidth/16)*9)
+if config.autoDimensions
+  config.dimensions =
+    width: parentElement.offsetWidth
+    height: (parentElement.offsetWidth/16)*9
+renderer.setSize(config.dimensions.width, config.dimensions.height)
 parentElement.appendChild(renderer.domElement)
 
 
@@ -168,7 +176,7 @@ scene.add(meshBox)
 scene.add(rotationBox)
 
 # Camera setup
-camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 )
+camera = new THREE.PerspectiveCamera( 45, config.dimensions.width / config.dimensions.height, 0.1, 1000 )
 camera.position.z = 10
 rotationBox.add( camera )
 
