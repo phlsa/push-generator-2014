@@ -6,6 +6,7 @@ config =
   useAnimation: no
   magnification: 3    # only used when setting the zoom level at the end of the build
   forceCenterOnFinish: yes
+  saveFileOnFinish: yes
 
 fullString = ""
 capturedString = ""
@@ -216,6 +217,9 @@ buildFinished = ->
     #size = 3 if size < 3
     dist =  size / (Math.sin( camera.fov * (Math.PI/180) / 2) )
     camera.position.z = dist/config.magnification
+
+  if config.saveFileOnFinish
+    saveStaticImage(fullString)
 
 
 nextLetter = ->
