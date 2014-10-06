@@ -1,6 +1,9 @@
 config = 
   autoCamera: false
   autoRotate: false
+  letterDelay: 50     # default: 50
+  useDelay: yes
+  useAnimation: yes
 
 fullString = ""
 capturedString = ""
@@ -76,6 +79,13 @@ class Tetra
     return @mesh
 
   tick: ->
+    # check if we need to animate at all
+    unless config.useAnimation
+      animating = false
+      @inflation = 1
+      @mesh.translateOnAxis(@base.normal, -2)
+      this.tick = -> return null
+
     # @inflation = 1
     animating = true
     if @inflation < 1
@@ -83,8 +93,7 @@ class Tetra
       @mesh.translateOnAxis(@base.normal, -0.05*2)
     else
       animating = false
-      this.tick = ->
-        return null
+      this.tick = -> return null
 
 
 Colors =
@@ -190,8 +199,14 @@ render = ->
 render()
 
 
+buildFinished = ->
+  window.alert('finish')
+
+
 nextLetter = ->
-  return if fullString is capturedString
+  if fullString is capturedString
+    _.defer buildFinished
+    return
   l = fullString[capturedString.length]
   capturedString += l
 
@@ -200,12 +215,21 @@ nextLetter = ->
 
   baseTetra = _.last(tetras)
   _.each frequencies, (freq, index) ->
-    after index*50, ->
+    if config.useDelay
+      after index*config.letterDelay, ->
+        t = addTetra(freq, baseTetra)
+        meshBox.add(t.getMesh())
+    else
       t = addTetra(freq, baseTetra)
       meshBox.add(t.getMesh())
   
   #resume once the letter is finished
-  after frequencies.length*50, ->
+  if config.useDelay
+    after frequencies.length*config.letterDelay, ->
+      visibleString += l
+      letterQueue.splice(0, 1)
+      nextLetter()
+  else
     visibleString += l
     letterQueue.splice(0, 1)
     nextLetter()
@@ -282,6 +306,4 @@ saveStaticImage = (name) ->
       'name': name,
     }, (data) ->
       console.log( data )
-
-
 
