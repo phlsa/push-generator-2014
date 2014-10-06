@@ -2,8 +2,10 @@ config =
   autoCamera: false
   autoRotate: false
   letterDelay: 50     # default: 50
-  useDelay: yes
-  useAnimation: yes
+  useDelay: no
+  useAnimation: no
+  magnification: 3    # only used when setting the zoom level at the end of the build
+  forceCenterOnFinish: yes
 
 fullString = ""
 capturedString = ""
@@ -200,7 +202,20 @@ render()
 
 
 buildFinished = ->
-  window.alert('finish')
+  console.log 'build finished'
+  
+  if config.forceCenterOnFinish
+    # update position
+    bbox.update()
+    c = bbox.box.center()
+    rc = rotationBox.position
+    rotationBox.position.set rc.x+(c.x-rc.x), rc.y+(c.y-rc.y), rc.z+(c.z-rc.z)
+
+    # update zooming
+    size = bbox.box.size().x
+    #size = 3 if size < 3
+    dist =  size / (Math.sin( camera.fov * (Math.PI/180) / 2) )
+    camera.position.z = dist/config.magnification
 
 
 nextLetter = ->
