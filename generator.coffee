@@ -219,7 +219,7 @@ buildFinished = ->
     camera.position.z = dist/config.magnification
 
   if config.saveFileOnFinish
-    saveStaticImage(fullString)
+    _.defer -> saveStaticImage(fullString)
 
 
 nextLetter = ->
