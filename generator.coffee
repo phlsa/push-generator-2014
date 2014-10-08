@@ -1,11 +1,13 @@
 config = 
-  autoCamera: false
-  autoRotate: false
+  autoCamera: yes
+  autoRotate: yes
+  autoRotateY: yes
+  rotateOnMouseMove: no
   letterDelay: 50     # default: 50
-  useDelay: no
-  useAnimation: no
+  useDelay: yes
+  useAnimation: yes
   magnification: 3    # only used when setting the zoom level at the end of the build
-  forceCenterOnFinish: yes
+  forceCenterOnFinish: no
   saveFileOnFinish: no
   autoDimensions: no
   dimensions:
@@ -201,6 +203,8 @@ render = ->
   
   if config.autoRotate
     rotationBox.rotation.y += 0.01
+    if config.autoRotateY
+      rotationBox.rotation.x += 0.005
   # lightBox.rotation.y -= 0.01
 
   # Camera testing
@@ -291,7 +295,7 @@ document.addEventListener 'mousedown', (e) ->
     pMouse = {x: e.clientX, y: e.clientY}
 
 
-if config.autoRotate
+if config.rotateOnMouseMove
   document.addEventListener 'mousemove', (e) ->
     rotationBox.rotation.x = (e.clientY / window.innerHeight - 0.5) * 3
 else
