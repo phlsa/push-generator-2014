@@ -11,8 +11,9 @@ config =
   saveFileOnFinish: no
   autoDimensions: no
   dimensions:
-    width: 500
-    height: 500
+    width: 1024
+    height: 768
+  performBuildOut: yes
 
 fullString = ""
 capturedString = ""
@@ -246,12 +247,13 @@ createFadeOutBuild = (onEnd) ->
 
 BuildOut =
   active: no
-  init: ->
+  init: (onFinish) ->
     BuildOut.actions = [
       createExplosionBuild(BuildOut.nextAction, 1, 10),
       createRotationBuild(BuildOut.nextAction),
       createFadeOutBuild(BuildOut.nextAction)
     ]
+    BuildOut.onFinish = onFinish
     BuildOut.currentAction = 0
     BuildOut.active = yes
     animating = yes
@@ -266,6 +268,7 @@ BuildOut =
     unless BuildOut.actions[BuildOut.currentAction]?
       BuildOut.active = no
       animating = no
+      BuildOut.onFinish()
 
 
 # Rendering
@@ -304,7 +307,7 @@ render = ->
 
 
 buildFinished = ->
-  console.log 'build finished'
+  #console.log 'build finished'
   
   if config.forceCenterOnFinish
     # update position
@@ -323,6 +326,11 @@ buildFinished = ->
     after 10, ->
       #saveStaticImage(fullString)
       window.actionAfterBuild() if window.actionAfterBuild?
+  
+  if config.performBuildOut
+    after 2000, ->
+      BuildOut.init ->
+        after 600, window.actionAfterBuild
 
 
 
@@ -428,6 +436,11 @@ document.getElementById('render-sequence').addEventListener 'click', (e) ->
   list = parseNameData window.prompt('Enter names to be rendered separated by semicoli')
   renderSequence(list)
 
+# Animate a sequence
+document.getElementById('animate-sequence').addEventListener 'click', (e) ->
+  e.preventDefault()
+  animateSequence window.prompt('Enter names to be rendered separated by semicoli')
+
 # Debug: Build out
 document.getElementById('build-out').addEventListener 'click', (e) ->
   e.preventDefault()
@@ -471,5 +484,27 @@ renderSequence = (sequence) ->
   renderNext()
 
 
+animateSequence = (sequence) ->
+  separator = '***'
+  current = 0
+  sequence = sequence.split(separator)
 
+  animateNext = ->
+    # reset all the strings
+    fullString = ""
+    capturedString = ""
+    visibleString = ""
+    letterQueue = []
+    
+    initScene()
+    fullString = sequence[current]
+    window.actionAfterBuild = ->
+        animateNext()
+    
+    current += 1
+    if current >= sequence.length
+      current = 0
+    nextLetter()
+
+  animateNext()
 
