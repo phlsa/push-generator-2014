@@ -207,14 +207,13 @@ createRotationBuild = (onEnd) ->
 
     perform: ->
       rotationBox.rotation.y += @increment
-      camera.position.z = camera.position.z + 2
+      camera.position.z = camera.position.z + 1
       @increment *= @multiplyer
       if rotationBox.rotation.y-@baseRotation > @maxRotation
         @onEnd()
   return build
 
 createExplosionBuild = (onEnd, direction, max) ->
-  animating = no
   direction = 1 unless direction?
   build = 
     onEnd: onEnd
@@ -228,8 +227,21 @@ createExplosionBuild = (onEnd, direction, max) ->
         tetra.getMesh().translateOnAxis(tetra.base.normal, -inc)
       @currentPos += @increment
       if Math.abs(@currentPos) > Math.abs(@maxPos)
-        animating = yes
         @onEnd()
+
+createFadeOutBuild = (onEnd) ->
+  build = 
+    onEnd: onEnd
+    decrement: 0.1
+    current: 1
+
+    perform: ->
+      animating = no
+      renderer.domElement.style.opacity = @current
+      @current -= @decrement
+      if @current < 0
+        @onEnd()
+
 
 
 BuildOut =
@@ -237,8 +249,8 @@ BuildOut =
   init: ->
     BuildOut.actions = [
       createExplosionBuild(BuildOut.nextAction, 1, 10),
-      #createExplosionBuild(BuildOut.nextAction, -1, 20),
-      createRotationBuild(BuildOut.nextAction)
+      createRotationBuild(BuildOut.nextAction),
+      createFadeOutBuild(BuildOut.nextAction)
     ]
     BuildOut.currentAction = 0
     BuildOut.active = yes
