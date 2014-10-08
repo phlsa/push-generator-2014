@@ -196,6 +196,66 @@ initScene = ->
   render()
 
 
+
+createRotationBuild = (onEnd) ->
+  build = 
+    onEnd: onEnd
+    maxRotation: 100
+    increment: 0.01
+    multiplyer: 1.03
+    baseRotation: rotationBox.rotation.y
+
+    perform: ->
+      rotationBox.rotation.y += @increment
+      camera.position.z = camera.position.z + 2
+      @increment *= @multiplyer
+      if rotationBox.rotation.y-@baseRotation > @maxRotation
+        @onEnd()
+  return build
+
+createExplosionBuild = (onEnd, direction, max) ->
+  animating = no
+  direction = 1 unless direction?
+  build = 
+    onEnd: onEnd
+    maxPos: max
+    increment: 0.2*direction
+    currentPos: 0
+
+    perform: ->
+      inc = @increment
+      _.each tetras, (tetra, index) ->
+        tetra.getMesh().translateOnAxis(tetra.base.normal, -inc)
+      @currentPos += @increment
+      if Math.abs(@currentPos) > Math.abs(@maxPos)
+        animating = yes
+        @onEnd()
+
+
+BuildOut =
+  active: no
+  init: ->
+    BuildOut.actions = [
+      createExplosionBuild(BuildOut.nextAction, 1, 10),
+      #createExplosionBuild(BuildOut.nextAction, -1, 20),
+      createRotationBuild(BuildOut.nextAction)
+    ]
+    BuildOut.currentAction = 0
+    BuildOut.active = yes
+    animating = yes
+
+  tick: ->
+    action = BuildOut.actions[BuildOut.currentAction]
+    action.perform() if action?
+
+  nextAction: ->
+    console.log "next buildout"
+    BuildOut.currentAction += 1
+    unless BuildOut.actions[BuildOut.currentAction]?
+      BuildOut.active = no
+      animating = no
+
+
 # Rendering
 render = -> 
   window.animationId = requestAnimationFrame(render)
@@ -206,6 +266,10 @@ render = ->
     if config.autoRotateY
       rotationBox.rotation.x += 0.005
   # lightBox.rotation.y -= 0.01
+
+  # BuildOuts
+  if BuildOut.active
+    BuildOut.tick()
 
   # Camera testing
   unless animating or !config.autoCamera
@@ -222,6 +286,9 @@ render = ->
     camera.position.z = camera.position.z-(camera.position.z-dist)/5
   
   renderer.render(scene, camera)
+
+
+
 
 
 buildFinished = ->
@@ -349,6 +416,10 @@ document.getElementById('render-sequence').addEventListener 'click', (e) ->
   list = parseNameData window.prompt('Enter names to be rendered separated by semicoli')
   renderSequence(list)
 
+# Debug: Build out
+document.getElementById('build-out').addEventListener 'click', (e) ->
+  e.preventDefault()
+  BuildOut.init()
 
 saveStaticImage = (name, company) ->
   name = 'image-' + new Date().getTime() unless name?
@@ -386,3 +457,7 @@ renderSequence = (sequence) ->
     nextLetter()
 
   renderNext()
+
+
+
+
