@@ -237,8 +237,8 @@ buildFinished = ->
     camera.position.z = dist/config.magnification
 
   if config.saveFileOnFinish
-    _.defer ->
-      saveStaticImage(fullString)
+    after 10, ->
+      #saveStaticImage(fullString)
       window.actionAfterBuild() if window.actionAfterBuild?
 
 
@@ -342,22 +342,24 @@ reset.addEventListener 'click', (e) ->
 # Render Sequence
 document.getElementById('render-sequence').addEventListener 'click', (e) ->
   e.preventDefault()
-  list = window.prompt('Enter names to be rendered separated by semicoli')
-  renderSequence(list.split(';'))
+  list = parseNameData window.prompt('Enter names to be rendered separated by semicoli')
+  renderSequence(list)
 
 
-saveStaticImage = (name) ->
+saveStaticImage = (name, company) ->
   name = 'image-' + new Date().getTime() unless name?
   dataObj = renderer.domElement.toDataURL('image/png')
 
   $.post 'http://localhost/~psackl/generator-2014/saveImage.php', {
       'data': dataObj,
-      'name': name,
+      'name': name
+      'company': company
     }, (data) ->
       console.log( data )
 
 
 renderSequence = (sequence) ->
+  # Each element in sequence must have the format {first, last, company}
   config.saveFileOnFinish = yes
 
   renderNext = ->
@@ -368,10 +370,13 @@ renderSequence = (sequence) ->
     letterQueue = []
     
     initScene()
-    fullString = sequence.splice(0, 1)[0]
+    current = sequence.splice(0, 1)[0]
+    fullString = "#{current.first} #{current.last}"
     console.log 'will render: ' + fullString
     if sequence.length > 0
-      window.actionAfterBuild = renderNext
+      window.actionAfterBuild = ->
+        saveStaticImage(fullString, current.company)
+        renderNext()
     else
       window.actionAfterBuild = null
     nextLetter()
