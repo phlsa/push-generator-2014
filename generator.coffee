@@ -22,6 +22,8 @@ letterQueue = []
 animating = false
 animationId = 0
 
+textElement = document.getElementById('text-container')
+
 
 class Face
   constructor: (a, b, c) ->
@@ -201,7 +203,7 @@ initScene = ->
 createRotationBuild = (onEnd) ->
   build = 
     onEnd: onEnd
-    maxRotation: 100
+    maxRotation: 50
     increment: 0.01
     multiplyer: 1.03
     baseRotation: rotationBox.rotation.y
@@ -223,6 +225,7 @@ createExplosionBuild = (onEnd, direction, max) ->
     currentPos: 0
 
     perform: ->
+      textElement.className = ""
       inc = @increment
       _.each tetras, (tetra, index) ->
         tetra.getMesh().translateOnAxis(tetra.base.normal, -inc)
@@ -238,6 +241,7 @@ createFadeOutBuild = (onEnd) ->
 
     perform: ->
       animating = no
+      textElement.className = "transparent"
       renderer.domElement.style.opacity = @current
       @current -= @decrement
       if @current < 0
@@ -488,6 +492,7 @@ animateSequence = (sequence) ->
   separator = '***'
   current = 0
   sequence = sequence.split(separator)
+  document.getElementById('fullscreen-container').mozRequestFullScreen()
 
   animateNext = ->
     # reset all the strings
@@ -498,6 +503,7 @@ animateSequence = (sequence) ->
     
     initScene()
     fullString = sequence[current]
+    textElement.innerHTML = fullString
     window.actionAfterBuild = ->
         animateNext()
     
