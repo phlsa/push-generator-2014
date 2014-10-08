@@ -445,6 +445,11 @@ document.getElementById('animate-sequence').addEventListener 'click', (e) ->
   e.preventDefault()
   animateSequence window.prompt('Enter names to be rendered separated by semicoli')
 
+# Full Screen
+document.getElementById('full-screen').addEventListener 'click', (e) ->
+  e.preventDefault()
+  document.getElementById('fullscreen-container').mozRequestFullScreen()
+
 # Debug: Build out
 document.getElementById('build-out').addEventListener 'click', (e) ->
   e.preventDefault()
@@ -492,7 +497,6 @@ animateSequence = (sequence) ->
   separator = '***'
   current = 0
   sequence = sequence.split(separator)
-  document.getElementById('fullscreen-container').mozRequestFullScreen()
 
   animateNext = ->
     # reset all the strings
