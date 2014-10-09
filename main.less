@@ -54,3 +54,22 @@ a {
   transition-property: transform, opacity;
   transition-duration: 0.4s;
 }
+
+#sponsor-container {
+  width: 500px;
+  position: relative;
+  margin-top: -200px;
+  margin-left: 262px;
+}
+
+#sponsor-container img {
+  margin: 6px;
+  transition: all 0.3s ease;
+  transform: scale(0.2);
+  opacity: 0;
+}
+
+img.visible {
+  transform: none !important;
+  opacity: 1 !important;
+}

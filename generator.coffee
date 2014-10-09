@@ -509,7 +509,10 @@ animateSequence = (sequence) ->
     fullString = sequence[current]
     textElement.innerHTML = fullString
     window.actionAfterBuild = ->
-        animateNext()
+        if current%12 is 0
+          triggerSponsorBuild(animateNext)
+        else
+          animateNext()
     
     current += 1
     if current >= sequence.length
@@ -517,4 +520,22 @@ animateSequence = (sequence) ->
     nextLetter()
 
   animateNext()
+
+
+
+triggerSponsorBuild = (nextAction) ->
+  logos = document.getElementsByTagName('img')
+  _.each [0,1,2,3,4,5,6], (n) ->
+    after n*100, ->
+      logos[n].className = 'visible'
+
+  after 7*100+3000, ->
+    _.each [0,1,2,3,4,5,6], (n) ->
+      after n*100, ->
+        logos[n].className = ''
+
+    after 7*100, nextAction
+
+
+
 
