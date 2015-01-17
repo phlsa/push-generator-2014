@@ -11,8 +11,8 @@ config =
   saveFileOnFinish: no
   autoDimensions: no
   dimensions:
-    width: 1024
-    height: 768
+    width: 1920
+    height: 1080
   performBuildOut: yes
 
 fullString = ""
@@ -509,7 +509,7 @@ animateSequence = (sequence) ->
     fullString = sequence[current]
     textElement.innerHTML = fullString
     window.actionAfterBuild = ->
-        if current%12 is 0
+        if current%12 is 0 and current isnt 0
           triggerSponsorBuild(animateNext)
         else
           animateNext()
